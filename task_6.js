@@ -12,14 +12,14 @@ function mathOperation(arg1, arg2, operation){
 
 // Проверка работоспособности функции
 
-var arg1 = parseInt(prompt ("Введите первое число"));
+var arg1 = parseInt(prompt ("Задание 6. \nВведите первое число"));
 // Введёное значение должно быть числом, проверка
 if (!isNaN(arg1)){
-	var arg2 = parseInt(prompt ("Введите второе число"));
+	var arg2 = parseInt(prompt ("Задание 6. \nВведите второе число"));
 	// Вторая проверка
 	if (!isNaN(arg2)){
-		var operation = (prompt ("Введите символ математической операции (+ - * /)"));
-		alert (mathOperation(arg1, arg2, operation));
+		var operation = (prompt ("Задание 6. \nВведите символ математической операции (+ - * /)"));
+		alert ("Задание 6. \n"+arg1+" "+operation+" "+arg2+" = "+mathOperation(arg1, arg2, operation));
 	}
 	else {
 		alert("Error");
