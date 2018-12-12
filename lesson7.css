@@ -33,3 +33,11 @@ td.game-table-cell{
     margin: 30px auto 0;
     text-align: center;
 }
+.score{
+	height:30px;
+	vertical-align:middle;
+}
+.score p {
+	line-height:30px;
+	margin:0px;
+}
