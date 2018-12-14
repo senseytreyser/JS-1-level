@@ -59,6 +59,15 @@ function prepareGameField() {
     document.getElementById('snake-field').appendChild(game_table); // Добавление таблицы
 }
 
+/********************
+Вывод счёта на экран
+********************/
+function showScore(){
+	var scoreInDocument = document.querySelector(".scoreValue");
+	scoreInDocument.innerText = score;
+}
+
+
 /**
  * Старт игры
  */
@@ -67,7 +76,8 @@ function startGame() {
     respawn();//создали змейку
 
     snake_timer = setInterval(move, SNAKE_SPEED);//каждые 200мс запускаем функцию move
-    setTimeout(createFood, 5000);
+    setTimeout(createFood, 1000);
+
 }
 
 /**
@@ -96,7 +106,8 @@ function respawn() {
  * Движение змейки
  */
 function move() {
-    //console.log('move',direction);
+    //console.log('move',direction);	
+	
     // Сборка классов
     var snake_head_classes = snake[snake.length-1].getAttribute('class').split(' ');
 
@@ -107,7 +118,12 @@ function move() {
     var coord_x = parseInt(snake_coords[2]);
 
     // Определяем новую точку
-    if (direction == 'x-') {
+    coord_x = getNewCoords(coord_x, coord_y, direction)[0];
+	coord_y = getNewCoords(coord_x, coord_y, direction)[1];
+	
+	new_unit = document.getElementsByClassName('cell-' + coord_y + '-' + coord_x)[0];
+	
+	/*if (direction == 'x-') {
         new_unit = document.getElementsByClassName('cell-' + (coord_y) + '-' + (coord_x - 1))[0];
     }
     else if (direction == 'x+') {
@@ -118,13 +134,13 @@ function move() {
     }
     else if (direction == 'y-') {
         new_unit = document.getElementsByClassName('cell-' + (coord_y + 1) + '-' + (coord_x))[0];
-    }
+    }*/
 
     // Проверки
     // 1) new_unit не часть змейки
-    // 2) Змейка не ушла за границу поля
+	// 2) не препятствие
     //console.log(new_unit);
-    if (!isSnakeUnit(new_unit) && new_unit !== undefined) {
+    if (!isSnakeUnit(new_unit) && !isBarrierUnit(new_unit)) {
         // Добавление новой части змейки
         new_unit.setAttribute('class', new_unit.getAttribute('class') + ' snake-unit');
         snake.push(new_unit);
@@ -137,11 +153,54 @@ function move() {
 			
             // удаляем хвост
             removed.setAttribute('class', classes[0] + ' ' + classes[1]);
-        }
+			
+		}
     }
     else {
         finishTheGame();
     }
+}
+
+/****************************************************
+Определение новых координат головы змейки
+*****************************************************
+ * изменение координат с учётом безграничности поля
+ * @param {number} x - координата х
+ * @param {number} y - координата у
+ * @param {string} direction - направление
+ * @returns {number} [x,y] - массив координат
+*****************************************************/
+function getNewCoords(x,y,direction){
+	
+	switch (direction) {
+		case "x-":
+			x--;
+			break;
+		case "x+":
+			x++;
+			break;
+		case "y-":
+			y++;
+			break;
+		case "y+":
+			y--;
+			break;
+	}
+	
+	if (x > FIELD_SIZE_X-1) {
+		x = 0;
+	}
+	if (x < 0) {
+		x = FIELD_SIZE_X-1;
+	}
+	if (y > FIELD_SIZE_Y-1) {
+		y = 0;
+	}
+	if (y < 0) {
+		y = FIELD_SIZE_Y-1;
+	}
+	
+	return [x,y]
 }
 
 /**
@@ -149,7 +208,8 @@ function move() {
  * @param unit
  * @returns {boolean}
  */
-function isSnakeUnit(unit) {//проверка, что змейка не попала сама в себя в новой ячейке
+function isSnakeUnit(unit) {
+	//проверка, что змейка не попала сама в себя в новой ячейке
     var check = false;
 
     if (snake.includes(unit)) {//если в змейке содержится новая ячейка, значит возникло пересечение
@@ -157,6 +217,23 @@ function isSnakeUnit(unit) {//проверка, что змейка не поп�
     }
     return check;
 }
+
+/**************************
+ * Проверка на препятствие
+ * @param unit
+ * @returns {boolean}
+**************************/
+function isBarrierUnit(unit) {
+	//проверка, что змейка не попала в препятствие
+    var check = false;
+	var unit_classes = unit.getAttribute('class').split(' ');
+	
+    if (unit_classes.includes('barrier-unit')) {
+	    check = true;
+    }
+    return check;
+}
+
 /**
  * проверка на еду
  * @param unit
@@ -171,8 +248,12 @@ function haveFood(unit) {
     if (unit_classes.includes('food-unit')) {
         check = true;
         createFood();
+		
+		destroyOldBarrier();
+		createBarrier();
 
         score++;
+		showScore();
     }
     return check;
 }
@@ -192,7 +273,8 @@ function createFood() {
         var food_cell_classes = food_cell.getAttribute('class').split(' ');
 
         // проверка на змейку
-        if (!food_cell_classes.includes('snake-unit')) {
+        if (!food_cell_classes.includes('snake-unit') 
+			&& !food_cell_classes.includes('barrier-unit')) {
             var classes = '';
             for (var i = 0; i < food_cell_classes.length; i++) {
                 classes += food_cell_classes[i] + ' ';
@@ -204,12 +286,69 @@ function createFood() {
     }
 }
 
+/************************
+  Создание препятствий
+************************/
+function createBarrier() {
+    var numberOfBarriers = Math.floor(score/2);
+	//Всё аналогично с едой, только число препятствий больше
+	
+	//Создание новых препятствий
+    for (var i = 0; i < numberOfBarriers; i++){
+        var barrier_x = Math.floor(Math.random() * FIELD_SIZE_X);
+        var barrier_y = Math.floor(Math.random() * FIELD_SIZE_Y);
+
+        var barrier_cell = document.getElementsByClassName('cell-' + barrier_y + '-' + barrier_x)[0];
+        var barrier_cell_classes = barrier_cell.getAttribute('class').split(' ');
+
+        // проверка на змейку и еду
+        if (!barrier_cell_classes.includes('snake-unit')
+			&& !barrier_cell_classes.includes('food-unit')) {
+            var classes = '';
+            for (var k = 0; k < barrier_cell_classes.length; k++) {
+                classes += barrier_cell_classes[k] + ' ';
+            }
+            barrier_cell.setAttribute('class', classes + 'barrier-unit');
+        }
+    }
+}
+
+/***************************
+ Удаление старых препятсвий
+***************************/
+function destroyOldBarrier(){
+	
+	//Удаление старых препятствий
+	var oldBarriers = document.querySelectorAll(".barrier-unit");
+		
+	if ( oldBarriers.length != 0 ){
+		
+		var currentBarrier, barrier_cell_classes;
+		for (var i = 0; i < oldBarriers.length; i++){
+			
+			currentBarrier = oldBarriers[i];
+			barrier_cell_classes = currentBarrier.getAttribute('class').split(' ');
+			
+			var classes = '';
+			
+			for (var j = 0; j < barrier_cell_classes.length; j++) {
+					if (barrier_cell_classes[j] != 'barrier-unit')
+					classes += barrier_cell_classes[j] + ' ';
+				}
+			
+			currentBarrier.setAttribute('class', classes);
+		}
+		
+	}
+}
+
+
 /**
  * Изменение направления движения змейки
  * @param e - событие
  */
 function changeDirection(e) {
-    console.log(e);
+    //console.log(e);
 	switch (e.keyCode) {
         case 37: // Клавиша влево
             if (direction != 'x+') {
