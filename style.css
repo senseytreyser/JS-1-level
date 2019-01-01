@@ -1,0 +1,44 @@
+.thisRow{
+
+	margin-bottom:10px;
+}
+
+.img{
+	width:100%;
+}
+
+h3{
+	text-align: center;
+	font-size:20px;
+}
+
+.button {
+    padding: 0px;
+    background-color: #ffffff;
+    box-shadow: 0px 2px 4.85px 0.15px rgba(33, 33, 33, 0.35);
+    height: 45px;
+    box-sizing: border-box;
+    border-radius: 22px;
+	margin:20px auto 5px;
+}
+.button:hover {
+    background-color: #fcfcfc;
+}
+.button:active {
+    box-shadow: none;
+}
+
+.button p {
+	line-height: 45px;
+	margin:0px;
+	text-align: center;
+}
+
+.basket{
+	height:100px;
+	overflow-y:auto;
+}
+
+.basket p{
+	margin:0px;
+}
